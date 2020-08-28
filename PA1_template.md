@@ -8,7 +8,8 @@ output:
 
 ## Loading and preprocessing the data
 
-```{r, echo = TRUE}
+
+```r
 Activity <- read.csv("activity.csv", sep = ",") #Loading the .csv file
 Activity$date <- as.Date(Activity$date, format = "%Y-%m-%d") #convert the date field to Date class
 Activity$interval <- as.factor(Activity$interval) #convert the interval field to Factor class
@@ -16,15 +17,36 @@ ActivityFinal <- na.omit(Activity) #Removing the missing values
 str(ActivityFinal) #Checking the data
 ```
 
+```
+## 'data.frame':	15264 obs. of  3 variables:
+##  $ steps   : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ date    : Date, format: "2012-10-02" "2012-10-02" ...
+##  $ interval: Factor w/ 288 levels "0","5","10","15",..: 1 2 3 4 5 6 7 8 9 10 ...
+##  - attr(*, "na.action")= 'omit' Named int [1:2304] 1 2 3 4 5 6 7 8 9 10 ...
+##   ..- attr(*, "names")= chr [1:2304] "1" "2" "3" "4" ...
+```
+
 ## What is mean total number of steps taken per day?
 
-```{r, echo = TRUE}
+
+```r
 steps_per_day <- aggregate(steps ~ date, ActivityFinal, sum) #calculating the number of steps
 colnames(steps_per_day) <- c("date","steps") #column names
 head(steps_per_day) 
 ```
+
+```
+##         date steps
+## 1 2012-10-02   126
+## 2 2012-10-03 11352
+## 3 2012-10-04 12116
+## 4 2012-10-05 13294
+## 5 2012-10-06 15420
+## 6 2012-10-07 11015
+```
 #### Plotting the Histogram
-```{r, echo = TRUE}
+
+```r
 library(ggplot2) #Loading the ggplot library
 ggplot(steps_per_day, aes(x = steps)) +
         geom_histogram(fill = "blue", binwidth = 1000) +
@@ -32,18 +54,31 @@ ggplot(steps_per_day, aes(x = steps)) +
              x = "Number of steps per day", y = "Number of times ina day(count)") + theme_bw()
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
 #### Mean - Steps
-```{r, echo = TRUE}
+
+```r
 mean_steps <- mean(steps_per_day$steps, na.rm=TRUE)
 mean_steps
 ```
+
+```
+## [1] 10766.19
+```
 #### Median - Steps
-```{r, echo = TRUE}
+
+```r
 median_steps <- median(steps_per_day$steps, na.rm=TRUE)
 median_steps
 ```
+
+```
+## [1] 10765
+```
 ## What is the average daily activity pattern?
-```{r, echo = TRUE}
+
+```r
 steps_per_interval <- aggregate(ActivityFinal$steps, 
                                 by = list(interval = ActivityFinal$interval),
                                 FUN=mean, na.rm=TRUE)
@@ -54,25 +89,31 @@ steps_per_interval$interval <-
 colnames(steps_per_interval) <- c("interval", "steps")
 ```
 #### Plot with the time series of the average number of steps taken (averaged across all days) versus the 5-minute intervals
-```{r, echo = TRUE}
+
+```r
 ggplot(steps_per_interval, aes(x=interval, y=steps)) +
         geom_line(color = "green", size = 1) +
         labs(title="Average Daily Activity Pattern", x="Interval", y="Number of steps") +
         theme_bw()
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 #### 5-minute interval with the containing the maximum number of steps
-```{r, echo = TRUE}
+
+```r
 max_interval <- steps_per_interval[which.max(  
         steps_per_interval$steps),]
 ```
 
 ## Imputing missing values
 #### 1. Total number of missing values:
-```{r, echo = TRUE}
+
+```r
 missing_vals <- sum(is.na(Activity$steps))
 ```
 #### 2. Strategy for filling in all of the missing values in the dataset
-```{r, echo = TRUE}
+
+```r
 na_fill <- function(data, pervalue) {
         na_index <- which(is.na(data$steps))
         na_replace <- unlist(lapply(na_index, FUN=function(idx){
@@ -90,11 +131,24 @@ rdata_fill <- data.frame(
 str(rdata_fill)
 ```
 
-```{r, echo = TRUE}
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : num  1.717 0.3396 0.1321 0.1509 0.0755 ...
+##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: Factor w/ 288 levels "0","5","10","15",..: 1 2 3 4 5 6 7 8 9 10 ...
+```
+
+
+```r
 sum(is.na(rdata_fill$steps)) #check that if there are any missing values remaining or not
 ```
+
+```
+## [1] 0
+```
 #### 3. A histogram of the total number of steps taken each day
-```{r, echo = TRUE}
+
+```r
 fill_steps_per_day <- aggregate(steps ~ date, rdata_fill, sum)
 colnames(fill_steps_per_day) <- c("date","steps") #histogram of the daily total number of steps taken, plotted with a bin interval of 1000 steps, after filling missing values.
 ##plotting the histogram
@@ -104,8 +158,11 @@ ggplot(fill_steps_per_day, aes(x = steps)) +
              x = "Number of Steps per Day", y = "Number of times in a day(Count)") + theme_bw() 
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
 #### The mean and median total number of steps taken per day
-```{r, echo = TRUE}
+
+```r
 steps_mean_fill   <- mean(fill_steps_per_day$steps, na.rm=TRUE)
 steps_median_fill <- median(fill_steps_per_day$steps, na.rm=TRUE)
 ```
@@ -133,7 +190,8 @@ We do this comparison with the table with filled-in missing values.
 2. Subset the table into two parts - weekends (Saturday and Sunday) and weekdays (Monday through Friday).
 3. Tabulate the average steps per interval for each data set.
 4. Plot the two data sets side by side for comparison.
-```{r, echo = TRUE}
+
+```r
 weekdays_steps <- function(data) {
         weekdays_steps <- aggregate(data$steps, by=list(interval = data$interval),
                                     FUN=mean, na.rm=T)
@@ -162,10 +220,13 @@ data_by_weekdays <- function(data) {
 data_weekdays <- data_by_weekdays(rdata_fill)
 ```
 Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
-```{r, echo = TRUE}
+
+```r
 ggplot(data_weekdays, aes(x=interval, y=steps)) + 
         geom_line(color="red") + 
         facet_wrap(~ dayofweek, nrow=2, ncol=1) +
         labs(x="Interval", y="Number of steps") +
         theme_bw()
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
